@@ -152,4 +152,3 @@ async def add_tb_cls(m: types.Message, state: FSMContext):
     await AddTextbookState.waiting_for_subject.set()
     await m.answer("Fan nomini yozing (masalan: Matematika):", reply_markup=types.ReplyKeyboardRemove())
 
-@dp.
