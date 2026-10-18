@@ -1,14 +1,11 @@
 import logging
 import asyncio
-import aiogram
-from aiogram import Bot
-from aiogram import Dispatcher
-from aiogram import executor
-from aiogram import types
+import os
+from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State
-from aiogram.dispatcher.filters.state import StatesGroup
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiohttp import web
 
 BOT_TOKEN = "8156712952:AAFS8l6-06YpUa361zKylRj1-xJ_3Mv6eN4"
 ADMIN_IDS = [5621415174, 8761111637]
@@ -155,69 +152,4 @@ async def add_tb_cls(m: types.Message, state: FSMContext):
     await AddTextbookState.waiting_for_subject.set()
     await m.answer("Fan nomini yozing (masalan: Matematika):", reply_markup=types.ReplyKeyboardRemove())
 
-@dp.message_handler(state=AddTextbookState.waiting_for_subject)
-async def add_tb_sub(m: types.Message, state: FSMContext):
-    sub = m.text.strip()
-    data = await state.get_data()
-    cls, fid = data['cls'], data['file_id']
-    if cls not in textbooks_db:
-        textbooks_db[cls] = {}
-    textbooks_db[cls][sub] = fid
-    await state.finish()
-    await m.answer(f"✅ Saqlandi!\nSinf: {cls}\nFan: {sub}", reply_markup=get_admin_kb())
-
-@dp.message_handler(text="➕ Adabiy kitob qo'shish (PDF)", state="*")
-async def add_lit_start(m: types.Message):
-    if m.from_user.id not in ADMIN_IDS:
-        return
-    await AddLitState.waiting_for_file.set()
-    await m.answer("📥 Adabiy kitob PDF faylini yuboring:")
-
-@dp.message_handler(content_types=types.ContentType.DOCUMENT, state=AddLitState.waiting_for_file)
-async def add_lit_file(m: types.Message, state: FSMContext):
-    if not m.document.mime_type.endswith('pdf'):
-        await m.answer("⚠️ Faqat PDF yuboring!")
-        return
-    await state.update_data(file_id=m.document.file_id)
-    await AddLitState.waiting_for_category.set()
-    await m.answer("Kategoriyani yozing (masalan: O'zbek adabiyoti):", reply_markup=types.ReplyKeyboardRemove())
-
-@dp.message_handler(state=AddLitState.waiting_for_category)
-async def add_lit_cat(m: types.Message, state: FSMContext):
-    await state.update_data(cat=m.text.strip())
-    await AddLitState.waiting_for_title.set()
-    await m.answer("Kitob nomini yozing:")
-
-@dp.message_handler(state=AddLitState.waiting_for_title)
-async def add_lit_ttl(m: types.Message, state: FSMContext):
-    title = m.text.strip()
-    data = await state.get_data()
-    cat, fid = data['cat'], data['file_id']
-    if cat not in literature_db:
-        literature_db[cat] = {}
-    literature_db[cat][title] = fid
-    await state.finish()
-    await m.answer(f"✅ Kitob qo'shildi!\nKategoriya: {cat}\nNomi: {title}", reply_markup=get_admin_kb())
-
-@dp.message_handler(text="📢 Xabar yuborish", state="*")
-async def broadcast_start(m: types.Message):
-    if m.from_user.id not in ADMIN_IDS:
-        return
-    await BroadcastState.waiting_for_message.set()
-    await m.answer("Yuboriladigan xabarni kiriting:")
-
-@dp.message_handler(state=BroadcastState.waiting_for_message)
-async def broadcast_send(m: types.Message, state: FSMContext):
-    await state.finish()
-    cnt = 0
-    for uid in users_set:
-        try:
-            await bot.send_message(uid, m.text)
-            cnt += 1
-            await asyncio.sleep(0.05)
-        except Exception:
-            pass
-    await m.answer(f"✅ Xabar {cnt} ta foydalanuvchiga yuborildi!", reply_markup=get_admin_kb())
-
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+@dp.
